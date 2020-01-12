@@ -1,0 +1,1 @@
+const int BOMB = -1;
