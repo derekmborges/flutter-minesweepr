@@ -61,12 +61,8 @@ class Cell {
     value = BOMB;
   }
 
-  void unMarkBomb() {
-    isMarkedAsBomb = false;
-  }
-
-  void markAsBomb() {
-    isMarkedAsBomb = true;
+  void toggleMarkAsBomb() {
+    isMarkedAsBomb = !isMarkedAsBomb;
   }
 
   @override

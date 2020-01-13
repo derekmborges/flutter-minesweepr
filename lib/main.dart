@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:minesweepr/colors.dart';
+import 'package:minesweepr/data/Cell.dart';
+import 'package:minesweepr/data/Coordinate.dart';
+import 'package:minesweepr/data/Grid.dart';
+import 'package:minesweepr/assets/bomb_icon.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,15 +27,24 @@ class Minesweepr extends StatefulWidget {
 }
 
 class _MinesweeprState extends State<Minesweepr> {
-  int bombsRemaining = 30;
-  List<bool> cellsRevealed = List.generate(32, (_) => false);
-  List<bool> cellsMarked = List.generate(32, (_) => false);
+  Grid grid;
+  int bombsRemaining;
+
+  @override
+  void initState() {
+    super.initState();
+    grid = Grid(
+      width: 8,
+      height: 16,
+      bombCount: 20
+    );
+    Coordinate safeCoordinate = Coordinate(0, 0);
+    grid.generateGrid(safeCoordinate);
+    bombsRemaining = grid.bombCount;
+  }
 
   @override
   Widget build(BuildContext context) {
-    double deviceWidth = MediaQuery.of(context).size.width;
-    double deviceHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Bombs left: $bombsRemaining'),
@@ -49,17 +61,17 @@ class _MinesweeprState extends State<Minesweepr> {
       body: Container(
         padding: EdgeInsets.all(8.0),
         child: GridView.count(
-          crossAxisCount: 4,
-          children: _buildGrid(cellsRevealed.length),
+          crossAxisCount: grid.width,
+          children: _buildGrid(grid),
           physics: NeverScrollableScrollPhysics(),
         ),
       ),
     );
   }
 
-  List<Widget> _buildGrid(int count) {
+  List<Widget> _buildGrid(Grid grid) {
     List<Widget> buttons = List.generate(
-      count,
+      grid.width * grid.height,
       (int index) => Padding(
         padding: const EdgeInsets.all(1.0),
         child: Stack(
@@ -68,26 +80,26 @@ class _MinesweeprState extends State<Minesweepr> {
               child: Material(
                 elevation: 0.0,
                 color: colorRevealedCellBackground,
-                child: Center(child: Text('$index')),
+                child: Center(child: Text('${_getCell(index).value}')),
               ),
             ),
             Positioned.fill(
               child: AnimatedOpacity(
                 duration: Duration(milliseconds: 300),
-                opacity: isCellRevealed(index) ? 0.0 : 1.0,
+                opacity: _getCell(index).isRevealed ? 0.0 : 1.0,
                 curve: Curves.easeOut,
                 child: GestureDetector(
-                  onLongPress: !isCellRevealed(index)
+                  onLongPress: !_getCell(index).isRevealed
                       ? () => _toggleBomb(index)
                       : () => {},
-                  onDoubleTap: !isCellRevealed(index)
+                  onDoubleTap: !_getCell(index).isRevealed
                       ? () => _toggleBomb(index)
                       : () => {},
                   child: MaterialButton(
                     elevation: 0.0,
                     color: colorConcealedCell,
                     disabledColor: colorConcealedCell,
-                    onPressed: (!isCellRevealed(index) && !isCellMarked(index))
+                    onPressed: (!_getCell(index).isRevealed && !_getCell(index).isMarkedAsBomb)
                         ? () => _revealCell(index)
                         : null,
                   ),
@@ -95,12 +107,12 @@ class _MinesweeprState extends State<Minesweepr> {
               ),
             ),
             Positioned.fill(
-              child: isCellMarked(index) ? Center(
+              child: _getCell(index).isMarkedAsBomb ? Center(
                 child: GestureDetector(
                   onDoubleTap: () => _toggleBomb(index),
                   onLongPress: () => _toggleBomb(index),
                   child: Icon(
-                    Icons.bug_report,
+                    BombIcon.bomb,
                     semanticLabel: 'bomb',
                     size: 36.0,
                   ),
@@ -114,20 +126,30 @@ class _MinesweeprState extends State<Minesweepr> {
     return buttons;
   }
 
-  bool isCellRevealed(int index) => cellsRevealed[index];
-  bool isCellMarked(int index) => cellsMarked[index];
-
   void _revealCell(int index) {
+    Cell cell = _getCell(index);
     setState(() {
-      cellsRevealed[index] = !cellsRevealed[index];
+      cell.isRevealed = true;
     });
   }
 
   void _toggleBomb(int index) {
+    Cell cell = _getCell(index);
     setState(() {
-      cellsMarked[index] = !cellsMarked[index];
-      bombsRemaining += (cellsMarked[index] ? -1 : 1);
+      cell.toggleMarkAsBomb();
+      bombsRemaining += (cell.isMarkedAsBomb ? -1 : 1);
     });
+  }
+
+  Cell _getCell(int index) {
+    Coordinate coordinate = _getCoordinate(index);
+    return grid.cell(coordinate);
+  }
+
+  Coordinate _getCoordinate(int index) {
+    int x = index % grid.width;
+    int y = index ~/ grid.width;
+    return Coordinate(x, y);
   }
 }
 
