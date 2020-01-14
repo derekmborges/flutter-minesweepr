@@ -83,6 +83,7 @@ class Grid {
     }
   }
 
+  // TODO: fix calculation, it's not right.
   void _fillNeighborBombCounts() {
     for (int x= 0; x<width; x++) {
       for (int y=0; y<height; y++) {

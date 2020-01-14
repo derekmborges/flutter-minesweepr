@@ -34,9 +34,9 @@ class _MinesweeprState extends State<Minesweepr> {
   void initState() {
     super.initState();
     grid = Grid(
-      width: 8,
-      height: 16,
-      bombCount: 20
+      width: 6,
+      height: 12,
+      bombCount: 10
     );
     Coordinate safeCoordinate = Coordinate(0, 0);
     grid.generateGrid(safeCoordinate);
@@ -58,83 +58,112 @@ class _MinesweeprState extends State<Minesweepr> {
           )
         ],
       ),
-      body: Container(
-        padding: EdgeInsets.all(8.0),
-        child: GridView.count(
-          crossAxisCount: grid.width,
-          children: _buildGrid(grid),
-          physics: NeverScrollableScrollPhysics(),
-        ),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: GridView.builder(
+              itemCount: grid.width * grid.height,
+              itemBuilder: (context, index) {
+                Cell cell = _getCell(index);
+                return _buildCell(cell);
+              },
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: grid.width),
+              shrinkWrap: true,
+              padding: EdgeInsets.all(10.0),
+              physics: NeverScrollableScrollPhysics(),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              MaterialButton(
+                child: Text('NEW GAME'),
+                onPressed: () {},
+              ),
+              MaterialButton(
+                child: Text('DIFFICULTY'),
+                onPressed: () {},
+              )
+            ],
+          )
+        ],
       ),
     );
   }
 
-  List<Widget> _buildGrid(Grid grid) {
-    List<Widget> buttons = List.generate(
-      grid.width * grid.height,
-      (int index) => Padding(
-        padding: const EdgeInsets.all(1.0),
-        child: Stack(
-          children: <Widget>[
-            Positioned.fill(
-              child: Material(
-                elevation: 0.0,
-                color: colorRevealedCellBackground,
-                child: Center(child: Text('${_getCell(index).value}')),
-              ),
-            ),
-            Positioned.fill(
-              child: AnimatedOpacity(
-                duration: Duration(milliseconds: 300),
-                opacity: _getCell(index).isRevealed ? 0.0 : 1.0,
-                curve: Curves.easeOut,
-                child: GestureDetector(
-                  onLongPress: !_getCell(index).isRevealed
-                      ? () => _toggleBomb(index)
-                      : () => {},
-                  onDoubleTap: !_getCell(index).isRevealed
-                      ? () => _toggleBomb(index)
-                      : () => {},
-                  child: MaterialButton(
-                    elevation: 0.0,
-                    color: colorConcealedCell,
-                    disabledColor: colorConcealedCell,
-                    onPressed: (!_getCell(index).isRevealed && !_getCell(index).isMarkedAsBomb)
-                        ? () => _revealCell(index)
-                        : null,
-                  ),
-                )
-              ),
-            ),
-            Positioned.fill(
-              child: _getCell(index).isMarkedAsBomb ? Center(
-                child: GestureDetector(
-                  onDoubleTap: () => _toggleBomb(index),
-                  onLongPress: () => _toggleBomb(index),
-                  child: Icon(
+  Widget _buildCell(Cell cell) =>
+    Padding(
+      padding: const EdgeInsets.all(1.0),
+      child: Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: Material(
+              elevation: 0.0,
+              color: colorRevealedCellBackground,
+              child: Center(
+                child: cell.isBomb ?
+                  Icon(
                     BombIcon.bomb,
-                    semanticLabel: 'bomb',
-                    size: 36.0,
-                  ),
+                    color: colorMineCellBackground
+                  )
+                    :
+                  Text(
+                    '${cell.value}',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      color: cell.textColor
+                    ),
+                  )
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: AnimatedOpacity(
+              duration: Duration(milliseconds: 300),
+              opacity: cell.isRevealed ? 0.0 : 1.0,
+              curve: Curves.easeOut,
+              child: GestureDetector(
+                onLongPress: !cell.isRevealed
+                    ? () => _toggleBomb(cell)
+                    : () => {},
+                onDoubleTap: !cell.isRevealed
+                    ? () => _toggleBomb(cell)
+                    : () => {},
+                child: MaterialButton(
+                  elevation: 0.0,
+                  color: colorConcealedCell,
+                  disabledColor: colorConcealedCell,
+                  onPressed: (!cell.isRevealed && !cell.isMarkedAsBomb)
+                      ? () => _revealCell(cell)
+                      : null,
                 ),
-              ) : Container(),
-            )
-          ],
-        ),
-      )
+              )
+            ),
+          ),
+          Positioned.fill(
+            child: cell.isMarkedAsBomb ? Center(
+              child: GestureDetector(
+                onDoubleTap: () => _toggleBomb(cell),
+                onLongPress: () => _toggleBomb(cell),
+                child: Icon(
+                  BombIcon.bomb,
+                  semanticLabel: 'bomb',
+                  size: grid.height * 2.0,
+                ),
+              ),
+            ) : Container(),
+          )
+        ],
+      ),
     );
-    return buttons;
-  }
 
-  void _revealCell(int index) {
-    Cell cell = _getCell(index);
+  void _revealCell(Cell cell) {
     setState(() {
       cell.isRevealed = true;
     });
   }
 
-  void _toggleBomb(int index) {
-    Cell cell = _getCell(index);
+  void _toggleBomb(Cell cell) {
     setState(() {
       cell.toggleMarkAsBomb();
       bombsRemaining += (cell.isMarkedAsBomb ? -1 : 1);

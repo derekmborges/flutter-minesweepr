@@ -7,7 +7,7 @@
 ///
 /// flutter:
 ///   fonts:
-///    - family:  MyFlutterApp
+///    - family:  BombIcon
 ///      fonts:
 ///       - asset: fonts/BombIcon.ttf
 ///
