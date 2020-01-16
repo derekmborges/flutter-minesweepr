@@ -58,10 +58,11 @@ class Grid {
     _grid = [];
   }
 
-  void generateGrid(Coordinate safeCoordinate) {
+  void generateGrid() {
     _initializeGrid(width, height);
-    _fillGridWithBombs(bombCount, safeCoordinate);
+    _fillGridWithBombs(bombCount);
     _fillNeighborBombCounts();
+    _print();
   }
 
   void _initializeGrid(int width, int height) {
@@ -70,7 +71,7 @@ class Grid {
     );
   }
 
-  void _fillGridWithBombs(int count, Coordinate safeCoordinate) {
+  void _fillGridWithBombs(int count) {
     int bombsRemaining = count;
     while (bombsRemaining > 0) {
       int randomX = Random().nextInt(width - 1);
@@ -83,9 +84,8 @@ class Grid {
     }
   }
 
-  // TODO: fix calculation, it's not right.
   void _fillNeighborBombCounts() {
-    for (int x= 0; x<width; x++) {
+    for (int x=0; x<width; x++) {
       for (int y=0; y<height; y++) {
         if (!_grid[x][y].isBomb) {
           List<Cell> neighbors = _neighbors(x, y);
@@ -100,7 +100,7 @@ class Grid {
     List<Cell> neighbors = [];
     for (int xPrime = -1; xPrime <= 1; xPrime++) {
       for (int yPrime = -1; yPrime <= 1; yPrime++) {
-        if (xPrime != 0 && yPrime != 0 && _neighborExists(x + xPrime, y + yPrime)) {
+        if (!(xPrime == 0 && yPrime == 0) && _cellExists(x + xPrime, y + yPrime)) {
           neighbors.add(_grid[x + xPrime][y + yPrime]);
         }
       }
@@ -108,9 +108,23 @@ class Grid {
     return neighbors;
   }
 
-  bool _neighborExists(int x, int y) =>
-      x >= 0 && x < width
-   && y >= 0 && y < height;
+  bool _cellExists(int x, int y) =>
+      x >= 0 && x < width &&
+      y >= 0 && y < height;
 
   Cell cell(Coordinate coordinate) => _grid[coordinate.x][coordinate.y];
+
+  void _print() {
+    print("----- PRINTING GENERATED GRID -----");
+    String line;
+    for (int y=0; y<height; y++) {
+      line = "|";
+      for (int x=0; x<width; x++) {
+        line += _grid[x][y].toString().padLeft(3).padRight(5);
+      }
+      line += "|";
+      print(line);
+    }
+    print("------------ END GRID -------------");
+  }
 }

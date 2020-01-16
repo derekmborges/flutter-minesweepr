@@ -38,8 +38,7 @@ class _MinesweeprState extends State<Minesweepr> {
       height: 12,
       bombCount: 10
     );
-    Coordinate safeCoordinate = Coordinate(0, 0);
-    grid.generateGrid(safeCoordinate);
+    grid.generateGrid();
     bombsRemaining = grid.bombCount;
   }
 
@@ -99,16 +98,16 @@ class _MinesweeprState extends State<Minesweepr> {
           Positioned.fill(
             child: Material(
               elevation: 0.0,
-              color: colorRevealedCellBackground,
+              color: cell.backgroundColor,
               child: Center(
                 child: cell.isBomb ?
                   Icon(
                     BombIcon.bomb,
-                    color: colorMineCellBackground
+                    color: cell.textColor
                   )
                     :
                   Text(
-                    '${cell.value}',
+                    cell.toString(),
                     style: TextStyle(
                       fontSize: 18.0,
                       color: cell.textColor
