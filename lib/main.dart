@@ -36,6 +36,10 @@ class _MinesweeprState extends State<Minesweepr> {
   void initState() {
     super.initState();
     selectedDifficulty = mediumDifficulty;
+    _initGrid();
+  }
+
+  void _initGrid() {
     grid = Grid(
         width: selectedDifficulty.width,
         height: selectedDifficulty.height,
@@ -78,13 +82,39 @@ class _MinesweeprState extends State<Minesweepr> {
               MaterialButton(
                 child: Text(selectedDifficulty.label.toUpperCase()),
                 onPressed: () {
-                  // TODO: Open dialog to change difficulty
+                  openDifficultyBottomSheet();
                 },
               )
             ],
           )
         ],
       ),
+    );
+  }
+
+  void openDifficultyBottomSheet() {
+    showModalBottomSheet(context: context, builder: (builder) {
+      return Container(
+        child: Column(
+          children: <Widget>[
+            difficultyButton(easyDifficulty),
+            difficultyButton(mediumDifficulty),
+            difficultyButton(hardDifficulty)
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget difficultyButton(Difficulty difficulty) {
+    return MaterialButton(
+      child: Text(difficulty.label),
+      onPressed: () {
+        setState(() {
+          selectedDifficulty = difficulty;
+        });
+        Navigator.of(context).pop();
+      },
     );
   }
 
@@ -109,7 +139,7 @@ class _MinesweeprState extends State<Minesweepr> {
             color: colorConcealedCell,
             disabledColor: colorConcealedCell,
             onPressed: () {
-              initGame(index);
+              _initGame(index);
             },
           ),
         );
@@ -117,7 +147,8 @@ class _MinesweeprState extends State<Minesweepr> {
     );
   }
 
-  void initGame(index) {
+  void _initGame(index) {
+    _initGrid();
     Coordinate safeCoordinate = _getCoordinate(index);
     grid.generateGrid(safeCoordinate);
     if (grid.isInitialized) {
@@ -198,7 +229,6 @@ class _MinesweeprState extends State<Minesweepr> {
                 child: Icon(
                   BombIcon.bomb,
                   semanticLabel: 'bomb',
-                  size: grid.height * 2.0,
                 ),
               ),
             ) : Container(),
