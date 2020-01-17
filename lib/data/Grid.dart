@@ -16,7 +16,7 @@ class Grid {
         assert(height != null),
         assert(bombCount != null);
 
-  List<List<Cell>> _grid;
+  List<List<Cell>> _grid = [];
 
   bool get isInitialized => _grid.isNotEmpty;
 
@@ -58,11 +58,10 @@ class Grid {
     _grid = [];
   }
 
-  void generateGrid() {
+  void generateGrid(Coordinate safeCoordinate) {
     _initializeGrid(width, height);
-    _fillGridWithBombs(bombCount);
+    _fillGridWithBombs(bombCount, safeCoordinate);
     _fillNeighborBombCounts();
-    _print();
   }
 
   void _initializeGrid(int width, int height) {
@@ -71,24 +70,34 @@ class Grid {
     );
   }
 
-  void _fillGridWithBombs(int count) {
+  void _fillGridWithBombs(int count, Coordinate safeCoordinate) {
     int bombsRemaining = count;
     while (bombsRemaining > 0) {
       int randomX = Random().nextInt(width - 1);
       int randomY = Random().nextInt(height - 1);
 
-      if (!_grid[randomX][randomY].isBomb) {
+      if (!_grid[randomX][randomY].isBomb && !_isBombNearSafeCoordinate(Coordinate(randomX, randomY), safeCoordinate)) {
         _grid[randomX][randomY].setBomb();
         bombsRemaining--;
       }
     }
   }
 
+  bool _isBombNearSafeCoordinate(Coordinate bombCoordinate, Coordinate safeCoordinate) {
+    for (int xPrime=-1; xPrime<=1; xPrime++) {
+      for (int yPrime=-1; yPrime<=1; yPrime++) {
+        if (Coordinate(safeCoordinate.x + xPrime,  safeCoordinate.y + yPrime) == bombCoordinate)
+          return true;
+      }
+    }
+    return false;
+  }
+
   void _fillNeighborBombCounts() {
     for (int x=0; x<width; x++) {
       for (int y=0; y<height; y++) {
         if (!_grid[x][y].isBomb) {
-          List<Cell> neighbors = _neighbors(x, y);
+          List<Cell> neighbors = getNeighbors(x, y);
           neighbors.retainWhere((Cell neighbor) => neighbor.isBomb);
           _grid[x][y].value = neighbors.length;
         }
@@ -96,7 +105,7 @@ class Grid {
     }
   }
 
-  List<Cell> _neighbors(int x, int y) {
+  List<Cell> getNeighbors(int x, int y) {
     List<Cell> neighbors = [];
     for (int xPrime = -1; xPrime <= 1; xPrime++) {
       for (int yPrime = -1; yPrime <= 1; yPrime++) {

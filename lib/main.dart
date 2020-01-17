@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:minesweepr/colors.dart';
 import 'package:minesweepr/data/Cell.dart';
 import 'package:minesweepr/data/Coordinate.dart';
+import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
 import 'package:minesweepr/assets/bomb_icon.dart';
 
@@ -27,19 +28,20 @@ class Minesweepr extends StatefulWidget {
 }
 
 class _MinesweeprState extends State<Minesweepr> {
+  Difficulty selectedDifficulty;
   Grid grid;
   int bombsRemaining;
 
   @override
   void initState() {
     super.initState();
+    selectedDifficulty = mediumDifficulty;
     grid = Grid(
-      width: 6,
-      height: 12,
-      bombCount: 10
+        width: selectedDifficulty.width,
+        height: selectedDifficulty.height,
+        bombCount: selectedDifficulty.bombCount
     );
-    grid.generateGrid();
-    bombsRemaining = grid.bombCount;
+    bombsRemaining = selectedDifficulty.bombCount;
   }
 
   @override
@@ -60,33 +62,82 @@ class _MinesweeprState extends State<Minesweepr> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: GridView.builder(
-              itemCount: grid.width * grid.height,
-              itemBuilder: (context, index) {
-                Cell cell = _getCell(index);
-                return _buildCell(cell);
-              },
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: grid.width),
-              shrinkWrap: true,
-              padding: EdgeInsets.all(10.0),
-              physics: NeverScrollableScrollPhysics(),
-            ),
+            child: grid.isInitialized ? _gameGrid() : _nullGrid(),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               MaterialButton(
                 child: Text('NEW GAME'),
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    newGame();
+                  });
+                },
               ),
               MaterialButton(
-                child: Text('DIFFICULTY'),
-                onPressed: () {},
+                child: Text(selectedDifficulty.label.toUpperCase()),
+                onPressed: () {
+                  // TODO: Open dialog to change difficulty
+                },
               )
             ],
           )
         ],
       ),
+    );
+  }
+
+  void newGame() {
+    grid.reset();
+    bombsRemaining = selectedDifficulty.bombCount;
+  }
+
+  Widget _nullGrid() {
+    return GridView.builder(
+      key: Key("NullGrid"),
+      itemCount: selectedDifficulty.width * selectedDifficulty.height,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: selectedDifficulty.width),
+      shrinkWrap: true,
+      padding: EdgeInsets.all(10.0),
+      physics: NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.all(1.0),
+          child: MaterialButton(
+            elevation: 0.0,
+            color: colorConcealedCell,
+            disabledColor: colorConcealedCell,
+            onPressed: () {
+              initGame(index);
+            },
+          ),
+        );
+      }
+    );
+  }
+
+  void initGame(index) {
+    Coordinate safeCoordinate = _getCoordinate(index);
+    grid.generateGrid(safeCoordinate);
+    if (grid.isInitialized) {
+      Cell safeCell = _getCell(index);
+      _revealCell(safeCell);
+    }
+  }
+
+  Widget _gameGrid() {
+    return GridView.builder(
+      key: Key("GameGrid"),
+      itemCount: grid.width * grid.height,
+      itemBuilder: (context, index) {
+        Cell cell = _getCell(index);
+        return _buildCell(cell);
+      },
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: grid.width),
+      shrinkWrap: true,
+      padding: EdgeInsets.all(10.0),
+      physics: NeverScrollableScrollPhysics(),
     );
   }
 
@@ -159,7 +210,16 @@ class _MinesweeprState extends State<Minesweepr> {
   void _revealCell(Cell cell) {
     setState(() {
       cell.isRevealed = true;
+      if (cell.hasNoNeighboringBombs) {
+        _revealNeighbors(cell);
+      }
     });
+  }
+
+  void _revealNeighbors(Cell cell) {
+    List<Cell> neighbors = grid.getNeighbors(cell.locationX, cell.locationY);
+    neighbors.retainWhere((Cell neighbor) => !neighbor.isRevealed);
+    neighbors.forEach((Cell neighbor) => _revealCell(neighbor));
   }
 
   void _toggleBomb(Cell cell) {
