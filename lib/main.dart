@@ -5,6 +5,8 @@ import 'package:minesweepr/data/Coordinate.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
 import 'package:minesweepr/assets/bomb_icon.dart';
+import 'package:minesweepr/dropdown_formfield.dart';
+import 'package:vibration/vibration.dart';
 
 void main() => runApp(MyApp());
 
@@ -56,6 +58,26 @@ class _MinesweeprState extends State<Minesweepr> {
         actions: <Widget>[
           IconButton(
             icon: Icon(
+              Icons.refresh,
+              semanticLabel: 'newgame',
+            ),
+            onPressed: () {
+              setState(() {
+                newGame();
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              semanticLabel: 'settings',
+            ),
+            onPressed: () {
+              _openDifficultyBottomSheet();
+            },
+          ),
+          IconButton(
+            icon: Icon(
               Icons.info_outline,
               semanticLabel: 'info',
             ),
@@ -68,54 +90,58 @@ class _MinesweeprState extends State<Minesweepr> {
           Expanded(
             child: grid.isInitialized ? _gameGrid() : _nullGrid(),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              MaterialButton(
-                child: Text('NEW GAME'),
-                onPressed: () {
-                  setState(() {
-                    newGame();
-                  });
-                },
-              ),
-              MaterialButton(
-                child: Text(selectedDifficulty.label.toUpperCase()),
-                onPressed: () {
-                  openDifficultyBottomSheet();
-                },
-              )
-            ],
-          )
         ],
       ),
     );
   }
 
-  void openDifficultyBottomSheet() {
+  void _openDifficultyBottomSheet() {
     showModalBottomSheet(context: context, builder: (builder) {
       return Container(
-        child: Column(
-          children: <Widget>[
-            difficultyButton(easyDifficulty),
-            difficultyButton(mediumDifficulty),
-            difficultyButton(hardDifficulty)
-          ],
+        child: Center(
+          child: Form(
+            key: GlobalKey<FormState>(),
+            child: Column(
+              children: <Widget>[
+                Text(
+                  "Settings",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.all(16),
+                  child: DropDownFormField(
+                    titleText: 'Difficulty',
+                    hintText: 'Select one',
+                    value: selectedDifficulty,
+                    onSaved: (value) {
+                      setState(() {
+                        selectedDifficulty = value;
+                      });
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        selectedDifficulty = value;
+                      });
+                    },
+                    dataSource: [
+                      {"display": easyDifficulty.label, "value": easyDifficulty},
+                      {"display": mediumDifficulty.label, "value": mediumDifficulty},
+                      {"display": hardDifficulty.label, "value": hardDifficulty}
+                    ],
+                    textField: 'display',
+                    valueField: 'value',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     });
-  }
-
-  Widget difficultyButton(Difficulty difficulty) {
-    return MaterialButton(
-      child: Text(difficulty.label),
-      onPressed: () {
-        setState(() {
-          selectedDifficulty = difficulty;
-        });
-        Navigator.of(context).pop();
-      },
-    );
   }
 
   void newGame() {
@@ -257,6 +283,14 @@ class _MinesweeprState extends State<Minesweepr> {
       cell.toggleMarkAsBomb();
       bombsRemaining += (cell.isMarkedAsBomb ? -1 : 1);
     });
+    _vibrate();
+  }
+
+  void _vibrate() async {
+    bool hasVibrator = await Vibration.hasVibrator();
+    if (hasVibrator) {
+      Vibration.vibrate(duration: 50, amplitude: 50);
+    }
   }
 
   Cell _getCell(int index) {

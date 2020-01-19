@@ -10,3 +10,9 @@ class Difficulty {
 Difficulty easyDifficulty = Difficulty(6, 12, 10, "Easy");
 Difficulty mediumDifficulty = Difficulty(8, 16, 20, "Medium");
 Difficulty hardDifficulty = Difficulty(10, 22, 40, "Hard");
+
+List<Difficulty> difficulties = <Difficulty>[
+  easyDifficulty,
+  mediumDifficulty,
+  hardDifficulty
+];

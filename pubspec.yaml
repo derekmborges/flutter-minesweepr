@@ -4,7 +4,7 @@ description: A mobile Minesweeper written in Flutter.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.2.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
@@ -12,6 +12,8 @@ dependencies:
 
   cupertino_icons: ^0.1.2
   flutter_launcher_icons: ^0.7.2+1
+  vibration: 1.2.2
+  holding_gesture: ^0.0.3
 
 dev_dependencies:
   flutter_test:
