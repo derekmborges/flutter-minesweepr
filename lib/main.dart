@@ -120,11 +120,13 @@ class _MinesweeprState extends State<Minesweepr> {
                     onSaved: (value) {
                       setState(() {
                         selectedDifficulty = value;
+                        newGame();
                       });
                     },
                     onChanged: (value) {
                       setState(() {
                         selectedDifficulty = value;
+                        newGame();
                       });
                     },
                     dataSource: [
@@ -304,5 +306,3 @@ class _MinesweeprState extends State<Minesweepr> {
     return Coordinate(x, y);
   }
 }
-
-
