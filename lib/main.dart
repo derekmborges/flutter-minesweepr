@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:minesweepr/colors.dart';
 import 'package:minesweepr/data/Cell.dart';
@@ -6,6 +7,7 @@ import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
 import 'package:minesweepr/assets/bomb_icon.dart';
 import 'package:minesweepr/dropdown_formfield.dart';
+import 'package:minesweepr/game_over_popup.dart';
 import 'package:vibration/vibration.dart';
 
 void main() => runApp(MyApp());
@@ -63,7 +65,7 @@ class _MinesweeprState extends State<Minesweepr> {
             ),
             onPressed: () {
               setState(() {
-                newGame();
+                _newGame();
               });
             },
           ),
@@ -120,13 +122,13 @@ class _MinesweeprState extends State<Minesweepr> {
                     onSaved: (value) {
                       setState(() {
                         selectedDifficulty = value;
-                        newGame();
+                        _newGame();
                       });
                     },
                     onChanged: (value) {
                       setState(() {
                         selectedDifficulty = value;
-                        newGame();
+                        _newGame();
                       });
                     },
                     dataSource: [
@@ -146,9 +148,11 @@ class _MinesweeprState extends State<Minesweepr> {
     });
   }
 
-  void newGame() {
-    grid.reset();
-    bombsRemaining = selectedDifficulty.bombCount;
+  void _newGame() {
+    setState(() {
+      grid.reset();
+      bombsRemaining = selectedDifficulty.bombCount;
+    });
   }
 
   Widget _nullGrid() {
@@ -158,7 +162,7 @@ class _MinesweeprState extends State<Minesweepr> {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: selectedDifficulty.width),
       shrinkWrap: true,
       padding: EdgeInsets.all(10.0),
-      physics: NeverScrollableScrollPhysics(),
+      physics: ClampingScrollPhysics(),
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.all(1.0),
@@ -196,7 +200,7 @@ class _MinesweeprState extends State<Minesweepr> {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: grid.width),
       shrinkWrap: true,
       padding: EdgeInsets.all(10.0),
-      physics: NeverScrollableScrollPhysics(),
+      physics: ClampingScrollPhysics(),
     );
   }
 
@@ -268,10 +272,67 @@ class _MinesweeprState extends State<Minesweepr> {
   void _revealCell(Cell cell) {
     setState(() {
       cell.isRevealed = true;
-      if (cell.hasNoNeighboringBombs) {
+      if (cell.isBomb) {
+        _endGame();
+      } else if (cell.hasNoNeighboringBombs) {
         _revealNeighbors(cell);
       }
     });
+  }
+
+  void _endGame() {
+    int index = 0;
+    Timer.periodic(Duration(microseconds: 2000), (Timer t) {
+      if (index < (grid.width*grid.height)) {
+        Cell cell = _getCell(index);
+        if (!cell.isRevealed) {
+          setState(() {
+            cell.isRevealed = true;
+          });
+        }
+        index++;
+      } else {
+        showGameOverPopup(context, _popupBody(), "Uh Oh!");
+        t.cancel();
+      }
+    });
+  }
+
+  Widget _popupBody() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(top: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              "Game Over",
+              style: TextStyle(
+                color: colorPrimaryDark,
+                fontSize: 36.0,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+            child: MaterialButton(
+              minWidth: double.infinity,
+              height: 60,
+              color: colorOneNeighbor,
+              child: Text("NEW GAME", style: TextStyle(fontSize: 18.0)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _newGame();
+              },
+            ),
+          )
+        ],
+      )
+    );
   }
 
   void _revealNeighbors(Cell cell) {
