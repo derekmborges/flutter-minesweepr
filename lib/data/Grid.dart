@@ -18,6 +18,9 @@ class Grid {
 
   List<List<Cell>> _grid = [];
 
+  int _cellCount = 0;
+  int get cellCount => _cellCount;
+
   bool get isInitialized => _grid.isNotEmpty;
 
   bool get isClean => _allBombsMarked || _allNonBombsRevealed;
@@ -27,9 +30,9 @@ class Grid {
   }
 
   bool _allBombsInRowMarked(List<Cell> row) {
-    List<Cell> cells = row;
-    cells.retainWhere((Cell cell) => cell.isBomb);
-    return !cells.any((Cell cell) => !cell.isMarkedAsBomb);
+    List<Cell> bombs = row;
+    bombs.retainWhere((Cell cell) => cell.isBomb);
+    return !bombs.any((Cell cell) => !cell.isMarkedAsBomb);
   }
 
   bool get _allNonBombsRevealed {
@@ -68,6 +71,7 @@ class Grid {
     _grid = List.generate(width, (int x) =>
       List.generate(height, (int y) => Cell(x, y))
     );
+    _cellCount = width * height;
   }
 
   void _fillGridWithBombs(int count, Coordinate safeCoordinate) {

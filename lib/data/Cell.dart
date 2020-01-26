@@ -1,7 +1,6 @@
 import 'dart:ui';
-import 'package:minesweepr/colors.dart';
-
-import 'Constants.dart';
+import 'package:minesweepr/data/Constants.dart';
+import 'package:minesweepr/ui/colors.dart';
 
 class Cell {
   int value = 0;
@@ -52,6 +51,8 @@ class Cell {
 
   Color get backgroundColor =>
       isBomb ? colorMineCellBackground : colorRevealedCellBackground;
+
+  Color get winColor => colorOneNeighbor;
 
   bool get isBomb => value == BOMB;
 
