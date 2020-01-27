@@ -71,7 +71,7 @@ class _GridCellState extends State<GridCell> {
             child: AnimatedOpacity(
                 duration: Duration(milliseconds: 300),
                 opacity: cell.isRevealed ? 0.0 : 1.0,
-                curve: Curves.easeInOutBack,
+                curve: Curves.easeOutSine,
                 child: GestureDetector(
 //                  onLongPress: !cell.isRevealed
 //                      ? () => _toggleBomb(cell)
