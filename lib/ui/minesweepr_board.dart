@@ -1,16 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:minesweepr/assets/bomb_icon.dart';
-import 'file:///D:/workspace/FlutterProjects/minesweepr/lib/ui/colors.dart';
 import 'package:minesweepr/data/Cell.dart';
 import 'package:minesweepr/data/Coordinate.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
+import 'package:minesweepr/ui/colors.dart';
+import 'package:minesweepr/ui/dropdown_formfield.dart';
+import 'package:minesweepr/ui/game_over_popup.dart';
 import 'package:minesweepr/ui/grid_cell.dart';
-import 'file:///D:/workspace/FlutterProjects/minesweepr/lib/ui/dropdown_formfield.dart';
-import 'file:///D:/workspace/FlutterProjects/minesweepr/lib/ui/game_over_popup.dart';
-import 'package:vibration/vibration.dart';
 
 class MinesweeprBoard extends StatefulWidget {
   @override
@@ -267,15 +264,15 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
   void _revealCell(Cell cell) {
     setState(() {
       cell.isRevealed = true;
-      if (cell.isBomb) {
-        _revealBombs();
-      } else if (cell.hasNoNeighboringBombs) {
-        _revealNeighbors(cell);
-      }
-//      if (grid.isClean) {
-//        _revealBombs(won: true);
-//      }
     });
+
+    if (cell.isBomb) {
+      _revealBombs();
+    } else if (cell.hasNoNeighboringBombs) {
+      _revealNeighbors(cell);
+    } // else if (grid.isClean) {
+//      _revealBombs(won: true);
+//    }
   }
 
   Cell _getCell(int index) {

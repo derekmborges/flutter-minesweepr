@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:minesweepr/assets/bomb_icon.dart';
 import 'package:minesweepr/data/Cell.dart';
@@ -9,13 +11,15 @@ class GridCell extends StatefulWidget {
   final Function toggleBomb;
   final Function revealBombs;
   final Function revealNeighbors;
+  final Function checkGameStatus;
 
   const GridCell({
     Key key,
     @required this.cell,
     @required this.toggleBomb,
     @required this.revealBombs,
-    @required this.revealNeighbors
+    @required this.revealNeighbors,
+    @required this.checkGameStatus
   }) : super(key: key);
 
   @override
@@ -23,6 +27,16 @@ class GridCell extends StatefulWidget {
 }
 
 class _GridCellState extends State<GridCell> {
+  Timer _toggleTimer;
+
+
+  @override
+  void dispose() {
+    if (_toggleTimer != null) {
+      _toggleTimer.cancel();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +71,13 @@ class _GridCellState extends State<GridCell> {
             child: AnimatedOpacity(
                 duration: Duration(milliseconds: 300),
                 opacity: cell.isRevealed ? 0.0 : 1.0,
-                curve: Curves.easeOut,
+                curve: Curves.easeInOutBack,
                 child: GestureDetector(
-                  onLongPress: !cell.isRevealed
-                      ? () => _toggleBomb(cell)
-                      : () => {},
+//                  onLongPress: !cell.isRevealed
+//                      ? () => _toggleBomb(cell)
+//                      : () => {},
+                  onTapDown: (_) => _startTimer(cell),
+                  onTapUp: (_) => _toggleTimer.cancel(),
                   onDoubleTap: !cell.isRevealed
                       ? () => _toggleBomb(cell)
                       : () => {},
@@ -80,7 +96,7 @@ class _GridCellState extends State<GridCell> {
             child: cell.isMarkedAsBomb ? Center(
               child: GestureDetector(
                 onDoubleTap: () => _toggleBomb(cell),
-                onLongPress: () => _toggleBomb(cell),
+                onLongPressStart: (_) => _toggleBomb(cell),
                 child: Icon(
                   BombIcon.bomb,
                   semanticLabel: 'bomb',
@@ -93,18 +109,33 @@ class _GridCellState extends State<GridCell> {
     );
   }
 
+  void _startTimer(Cell cell) {
+    if (_toggleTimer != null) {
+      _toggleTimer.cancel();
+    }
+
+    _toggleTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      if (timer.tick == 2) {
+        setState(() {
+          _toggleBomb(cell);
+        });
+        timer.cancel();
+      }
+    });
+  }
+
   void _revealCell(Cell cell) {
-    setState(() {
-      cell.isRevealed = true;
+    if (_toggleTimer == null || !_toggleTimer.isActive) {
+      setState(() {
+        cell.isRevealed = true;
+      });
+
       if (cell.isBomb) {
         widget.revealBombs();
       } else if (cell.hasNoNeighboringBombs) {
         widget.revealNeighbors(cell);
       }
-//      if (grid.isClean) {
-//        _revealBombs(won: true);
-//      }
-    });
+    }
   }
 
   void _toggleBomb(Cell cell) {

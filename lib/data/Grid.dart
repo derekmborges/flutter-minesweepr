@@ -23,16 +23,23 @@ class Grid {
 
   bool get isInitialized => _grid.isNotEmpty;
 
-  bool get isClean => _allBombsMarked || _allNonBombsRevealed;
+  bool get isClean => _allBombsMarked; // || _allNonBombsRevealed;
 
   bool get _allBombsMarked {
-    return !_grid.any((List<Cell> row) => !_allBombsInRowMarked(row));
+//    return !_grid.any((List<Cell> row) => !_allBombsInRowMarked(row));
+    return !_grid.any((List<Cell> row) => _rowHasUnmarkedBombs(row));
   }
 
   bool _allBombsInRowMarked(List<Cell> row) {
     List<Cell> bombs = row;
     bombs.retainWhere((Cell cell) => cell.isBomb);
     return !bombs.any((Cell cell) => !cell.isMarkedAsBomb);
+  }
+
+  bool _rowHasUnmarkedBombs(List<Cell> row) {
+    List<Cell> bombsInRow = row;
+    bombsInRow.retainWhere((Cell cell) => cell.isBomb);
+    return bombsInRow.any((Cell bomb) => !bomb.isMarkedAsBomb);
   }
 
   bool get _allNonBombsRevealed {
