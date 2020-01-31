@@ -5,9 +5,11 @@ import 'package:minesweepr/data/Coordinate.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
 import 'package:minesweepr/ui/colors.dart';
-import 'package:minesweepr/ui/dropdown_formfield.dart';
+import 'package:minesweepr/ui/game_over_dialog.dart';
 import 'package:minesweepr/ui/game_over_popup.dart';
+import 'package:minesweepr/ui/game_won_dialog.dart';
 import 'package:minesweepr/ui/grid_cell.dart';
+import 'package:minesweepr/ui/settings_dialog.dart';
 
 class MinesweeprBoard extends StatefulWidget {
   @override
@@ -82,53 +84,18 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
 
   void _openDifficultyBottomSheet() {
     showModalBottomSheet(context: context, builder: (builder) {
-      return Container(
-        child: Center(
-          child: Form(
-            key: GlobalKey<FormState>(),
-            child: Column(
-              children: <Widget>[
-                Text(
-                  "Settings",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.all(16),
-                  child: DropDownFormField(
-                    titleText: 'Difficulty',
-                    hintText: 'Select one',
-                    value: selectedDifficulty,
-                    onSaved: (value) {
-                      setState(() {
-                        selectedDifficulty = value;
-                        _newGame();
-                      });
-                    },
-                    onChanged: (value) {
-                      setState(() {
-                        selectedDifficulty = value;
-                        _newGame();
-                      });
-                    },
-                    dataSource: [
-                      {"display": easyDifficulty.label, "value": easyDifficulty},
-                      {"display": mediumDifficulty.label, "value": mediumDifficulty},
-                      {"display": hardDifficulty.label, "value": hardDifficulty}
-                    ],
-                    textField: 'display',
-                    valueField: 'value',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return SettingsDialog(
+        selectedDifficulty: selectedDifficulty,
+        difficultyUpdated: _difficultyUpdated,
       );
     });
+  }
+
+  void _difficultyUpdated(Difficulty newDifficulty) {
+    setState(() {
+      selectedDifficulty = newDifficulty;
+    });
+    _newGame();
   }
 
   void _newGame() {
@@ -183,6 +150,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
           toggleBomb: _toggleBomb,
           revealBombs: _revealBombs,
           revealNeighbors: _revealNeighbors,
+          isClean: grid.isClean,
         );
       },
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: grid.width),
@@ -193,7 +161,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
   }
 
 
-  void _revealBombs({bool won = true}) {
+  void _revealBombs({bool won = false}) {
     int index = 0;
     Timer.periodic(Duration(microseconds: 2000), (Timer t) {
       if (index < (grid.width*grid.height)) {
@@ -205,54 +173,25 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
         }
         index++;
       } else {
-        showGameOverPopup(context, _popupBody(), "Uh Oh!");
+        if (won) {
+          showGameOverPopup(context, GameWonDialog(newGame: _newGame), "Congrats");
+        } else {
+          showGameOverPopup(context, GameOverDialog(newGame: _newGame), "Uh Oh!");
+        }
         t.cancel();
       }
     });
   }
 
-  Widget _popupBody() {
-    return Container(
-        width: double.infinity,
-        padding: EdgeInsets.only(top: 10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                "Game Over",
-                style: TextStyle(
-                    color: colorPrimaryDark,
-                    fontSize: 36.0,
-                    fontWeight: FontWeight.bold
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-              child: MaterialButton(
-                minWidth: double.infinity,
-                height: 60,
-                color: colorOneNeighbor,
-                child: Text("NEW GAME", style: TextStyle(fontSize: 18.0)),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _newGame();
-                },
-              ),
-            )
-          ],
-        )
-    );
-  }
-
   void _toggleBomb(Cell cell) {
     setState(() {
       cell.toggleMarkAsBomb();
+      grid.updateGameStatus(cell);
       bombsRemaining += (cell.isMarkedAsBomb ? -1 : 1);
     });
+    if (grid.isClean) {
+      _revealBombs(won: true);
+    }
   }
 
   void _revealNeighbors(Cell cell) {
@@ -270,9 +209,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
       _revealBombs();
     } else if (cell.hasNoNeighboringBombs) {
       _revealNeighbors(cell);
-    } // else if (grid.isClean) {
-//      _revealBombs(won: true);
-//    }
+    }
   }
 
   Cell _getCell(int index) {

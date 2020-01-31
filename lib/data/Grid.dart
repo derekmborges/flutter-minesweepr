@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:minesweepr/data/Cell.dart';
 import 'package:minesweepr/data/Coordinate.dart';
@@ -17,40 +18,18 @@ class Grid {
         assert(bombCount != null);
 
   List<List<Cell>> _grid = [];
+  List<Cell> _bombs = [];
+  List<Cell> _markedCells = [];
 
   int _cellCount = 0;
   int get cellCount => _cellCount;
 
+  bool _isClean = false;
+  bool get isClean => _isClean;
+
   bool get isInitialized => _grid.isNotEmpty;
 
-  bool get isClean => _allBombsMarked; // || _allNonBombsRevealed;
 
-  bool get _allBombsMarked {
-//    return !_grid.any((List<Cell> row) => !_allBombsInRowMarked(row));
-    return !_grid.any((List<Cell> row) => _rowHasUnmarkedBombs(row));
-  }
-
-  bool _allBombsInRowMarked(List<Cell> row) {
-    List<Cell> bombs = row;
-    bombs.retainWhere((Cell cell) => cell.isBomb);
-    return !bombs.any((Cell cell) => !cell.isMarkedAsBomb);
-  }
-
-  bool _rowHasUnmarkedBombs(List<Cell> row) {
-    List<Cell> bombsInRow = row;
-    bombsInRow.retainWhere((Cell cell) => cell.isBomb);
-    return bombsInRow.any((Cell bomb) => !bomb.isMarkedAsBomb);
-  }
-
-  bool get _allNonBombsRevealed {
-    return !_grid.any((List<Cell> row) => !_allNonBombsInRowRevealed(row));
-  }
-
-  bool _allNonBombsInRowRevealed(List<Cell> row) {
-    List<Cell> cells = row;
-    cells.retainWhere((Cell cell) => !cell.isBomb);
-    return !cells.any((Cell cell) => !cell.isRevealed);
-  }
 
   int get markedBombs {
     int total = 0;
@@ -89,6 +68,7 @@ class Grid {
 
       if (!_grid[randomX][randomY].isBomb && !_isBombNearSafeCoordinate(Coordinate(randomX, randomY), safeCoordinate)) {
         _grid[randomX][randomY].setBomb();
+        _bombs.add(_grid[randomX][randomY]);
         bombsRemaining--;
       }
     }
@@ -133,6 +113,16 @@ class Grid {
       y >= 0 && y < height;
 
   Cell cell(Coordinate coordinate) => _grid[coordinate.x][coordinate.y];
+
+  void updateGameStatus(Cell toggledBomb) {
+    toggledBomb.isMarkedAsBomb
+        ? _markedCells.add(toggledBomb)
+        : _markedCells.remove(toggledBomb);
+
+    if (DeepCollectionEquality.unordered().equals(_markedCells, _bombs)) {
+      _isClean = true;
+    }
+  }
 
   void _print() {
     print("----- PRINTING GENERATED GRID -----");

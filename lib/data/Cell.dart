@@ -49,9 +49,6 @@ class Cell {
     return color;
   }
 
-  Color get backgroundColor =>
-      isBomb ? colorMineCellBackground : colorRevealedCellBackground;
-
   Color get winColor => colorOneNeighbor;
 
   bool get isBomb => value == BOMB;

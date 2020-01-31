@@ -11,7 +11,7 @@ class GridCell extends StatefulWidget {
   final Function toggleBomb;
   final Function revealBombs;
   final Function revealNeighbors;
-  final Function checkGameStatus;
+  final bool isClean;
 
   const GridCell({
     Key key,
@@ -19,7 +19,7 @@ class GridCell extends StatefulWidget {
     @required this.toggleBomb,
     @required this.revealBombs,
     @required this.revealNeighbors,
-    @required this.checkGameStatus
+    @required this.isClean
   }) : super(key: key);
 
   @override
@@ -49,7 +49,11 @@ class _GridCellState extends State<GridCell> {
           Positioned.fill(
             child: Material(
               elevation: 0.0,
-              color: cell.backgroundColor,
+              color: cell.isBomb
+                      ? widget.isClean
+                        ? colorOneNeighbor
+                        : colorMineCellBackground
+                      : colorRevealedCellBackground,
               child: Center(
                   child: cell.isBomb ?
                   Icon(
@@ -73,11 +77,12 @@ class _GridCellState extends State<GridCell> {
                 opacity: cell.isRevealed ? 0.0 : 1.0,
                 curve: Curves.easeOutSine,
                 child: GestureDetector(
-//                  onLongPress: !cell.isRevealed
-//                      ? () => _toggleBomb(cell)
-//                      : () => {},
-                  onTapDown: (_) => _startTimer(cell),
-                  onTapUp: (_) => _toggleTimer.cancel(),
+                  onTapDown: !cell.isRevealed
+                      ? (_) => _startTimer(cell)
+                      : (_) {},
+                  onTapUp: !cell.isRevealed
+                      ? (_) => _toggleTimer.cancel()
+                      : (_) {},
                   onDoubleTap: !cell.isRevealed
                       ? () => _toggleBomb(cell)
                       : () => {},
