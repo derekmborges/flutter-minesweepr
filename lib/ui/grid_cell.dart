@@ -43,22 +43,20 @@ class _GridCellState extends State<GridCell> {
     Cell cell = widget.cell;
 
     return Padding(
-      padding: const EdgeInsets.all(1.0),
+      padding: const EdgeInsets.all(0.5),
       child: Stack(
         children: <Widget>[
           Positioned.fill(
             child: Material(
               elevation: 0.0,
-              color: cell.isBomb
-                      ? widget.isClean
-                        ? colorOneNeighbor
-                        : colorMineCellBackground
-                      : colorRevealedCellBackground,
+              color: Colors.black,
               child: Center(
                   child: cell.isBomb ?
                   Icon(
                       BombIcon.bomb,
-                      color: cell.textColor
+                      color: widget.isClean
+                          ? colorOneNeighbor
+                          : colorMineCellBackground
                   )
                       :
                   Text(
@@ -77,15 +75,12 @@ class _GridCellState extends State<GridCell> {
                 opacity: cell.isRevealed ? 0.0 : 1.0,
                 curve: Curves.easeOutSine,
                 child: GestureDetector(
-                  onTapDown: !cell.isRevealed
+                  onTapDown: !cell.isRevealed && !widget.isClean
                       ? (_) => _startTimer(cell)
                       : (_) {},
-                  onTapUp: !cell.isRevealed
+                  onTapUp: !cell.isRevealed && !widget.isClean
                       ? (_) => _toggleTimer.cancel()
                       : (_) {},
-                  onDoubleTap: !cell.isRevealed
-                      ? () => _toggleBomb(cell)
-                      : () => {},
                   child: MaterialButton(
                     elevation: 0.0,
                     color: colorConcealedCell,
@@ -100,8 +95,12 @@ class _GridCellState extends State<GridCell> {
           Positioned.fill(
             child: cell.isMarkedAsBomb ? Center(
               child: GestureDetector(
-                onDoubleTap: () => _toggleBomb(cell),
-                onLongPressStart: (_) => _toggleBomb(cell),
+                onTapDown: !cell.isRevealed && !widget.isClean
+                    ? (_) => _startTimer(cell)
+                    : (_) {},
+                onTapUp: !cell.isRevealed && !widget.isClean
+                    ? (_) => _toggleTimer.cancel()
+                    : (_) {},
                 child: Icon(
                   BombIcon.bomb,
                   semanticLabel: 'bomb',

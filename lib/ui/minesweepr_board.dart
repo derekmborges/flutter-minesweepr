@@ -72,12 +72,17 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
           )
         ],
       ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: grid.isInitialized ? _gameGrid() : _nullGrid(),
-          ),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          color: Colors.black
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: grid.isInitialized ? _gameGrid() : _nullGrid(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -115,7 +120,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
         physics: ClampingScrollPhysics(),
         itemBuilder: (context, index) {
           return Padding(
-            padding: const EdgeInsets.all(1.0),
+            padding: const EdgeInsets.all(0.5),
             child: MaterialButton(
               elevation: 0.0,
               color: colorConcealedCell,

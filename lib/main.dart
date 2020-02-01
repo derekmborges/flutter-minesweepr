@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/minesweepr_board.dart';
 
 void main() => runApp(MyApp());
@@ -10,7 +11,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Minesweepr',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: appBarColor,
       ),
       home: MinesweeprBoard(),
     );
