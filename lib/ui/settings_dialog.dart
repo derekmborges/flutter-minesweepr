@@ -2,14 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/ui/dropdown_formfield.dart';
 
-class SettingsDialog extends StatelessWidget {
+class SettingsDialog extends StatefulWidget {
   final Difficulty selectedDifficulty;
   final Function difficultyUpdated;
 
-  const SettingsDialog({Key key, this.selectedDifficulty, this.difficultyUpdated}) : super(key: key);
+  const SettingsDialog({
+    Key key,
+    this.selectedDifficulty,
+    this.difficultyUpdated
+  }) : super(key: key);
+
+  @override
+  _SettingsDialogState createState() => _SettingsDialogState();
+}
+
+class _SettingsDialogState extends State<SettingsDialog> {
+  Difficulty _difficultyController;
 
   @override
   Widget build(BuildContext context) {
+    if (_difficultyController == null) {
+      _difficultyController = widget.selectedDifficulty;
+    }
+
     return Container(
       child: Center(
         child: Form(
@@ -29,11 +44,11 @@ class SettingsDialog extends StatelessWidget {
                 child: DropDownFormField(
                   titleText: 'Difficulty',
                   hintText: 'Select one',
-                  value: selectedDifficulty,
-                  onSaved: (value) {
-                    difficultyUpdated(value);
+                  value: _difficultyController,
+                  onChanged: (value) {
+                    _difficultyController = value;
+                    widget.difficultyUpdated(value);
                   },
-                  onChanged: (value) {},
                   dataSource: [
                     {"display": easyDifficulty.label, "value": easyDifficulty},
                     {"display": mediumDifficulty.label, "value": mediumDifficulty},

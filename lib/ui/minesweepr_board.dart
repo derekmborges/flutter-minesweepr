@@ -4,6 +4,7 @@ import 'package:minesweepr/data/Cell.dart';
 import 'package:minesweepr/data/Coordinate.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
+import 'package:minesweepr/ui/settings_dialog_2.dart';
 import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/game_over_dialog.dart';
 import 'package:minesweepr/ui/game_over_popup.dart';
@@ -35,6 +36,11 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
         bombCount: selectedDifficulty.bombCount
     );
     bombsRemaining = selectedDifficulty.bombCount;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -88,12 +94,14 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
   }
 
   void _openDifficultyBottomSheet() {
-    showModalBottomSheet(context: context, builder: (builder) {
-      return SettingsDialog(
-        selectedDifficulty: selectedDifficulty,
-        difficultyUpdated: _difficultyUpdated,
-      );
-    });
+    showDialog(
+      context: context,
+      builder: (context) {
+        return MyDialog(
+          currentDifficulty: selectedDifficulty,
+          updateDifficulty: _difficultyUpdated,
+        );
+      });
   }
 
   void _difficultyUpdated(Difficulty newDifficulty) {
