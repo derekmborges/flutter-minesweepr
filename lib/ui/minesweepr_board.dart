@@ -1,16 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:minesweepr/assets/bomb_icon.dart';
 import 'package:minesweepr/data/Cell.dart';
 import 'package:minesweepr/data/Coordinate.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
-import 'package:minesweepr/ui/settings_dialog_2.dart';
 import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/game_over_dialog.dart';
 import 'package:minesweepr/ui/game_over_popup.dart';
 import 'package:minesweepr/ui/game_won_dialog.dart';
 import 'package:minesweepr/ui/grid_cell.dart';
-import 'package:minesweepr/ui/settings_dialog.dart';
+import 'package:minesweepr/ui/settings_dialog_2.dart';
 
 class MinesweeprBoard extends StatefulWidget {
   @override
@@ -21,6 +22,8 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
   Difficulty selectedDifficulty;
   Grid grid;
   int bombsRemaining;
+  Timer gameTimer;
+  int gameTimerLabel = 0;
 
   @override
   void initState() {
@@ -47,7 +50,17 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bombs left: $bombsRemaining'),
+        title: Row(
+          children: <Widget>[
+            Icon(BombIcon.bomb),
+            SizedBox(width: 5),
+            Text(bombsRemaining.toString()),
+            SizedBox(width: 15),
+            Icon(Icons.timer),
+            SizedBox(width: 5),
+            Text(gameTimerLabel.toString())
+          ],
+        ),
         actions: <Widget>[
           IconButton(
             icon: Icon(
@@ -115,6 +128,13 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
     setState(() {
       grid.reset();
       bombsRemaining = selectedDifficulty.bombCount;
+
+      if (gameTimer != null && gameTimer.isActive) {
+        setState(() {
+          gameTimer.cancel();
+          gameTimerLabel = 0;
+        });
+      }
     });
   }
 
@@ -150,6 +170,13 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> {
       Cell safeCell = _getCell(index);
       _revealCell(safeCell);
     }
+
+    gameTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        gameTimerLabel = timer.tick;
+        print('timer tick = ${timer.tick}');
+      });
+    });
   }
 
   Widget _gameGrid() {
