@@ -112,7 +112,7 @@ class Grid {
       x >= 0 && x < width &&
       y >= 0 && y < height;
 
-  Cell cell(Coordinate coordinate) => _grid[coordinate.x][coordinate.y];
+  Cell cell(Coordinate coordinate) => isInitialized ? _grid[coordinate.x][coordinate.y] : null;
 
   void updateGameStatus(Cell toggledBomb) {
     toggledBomb.isMarkedAsBomb

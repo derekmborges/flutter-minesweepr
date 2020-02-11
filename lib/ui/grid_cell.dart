@@ -8,6 +8,7 @@ import 'package:vibration/vibration.dart';
 
 class GridCell extends StatefulWidget {
   final Cell cell;
+  final double size;
   final Function toggleBomb;
   final Function revealBombs;
   final Function revealNeighbors;
@@ -16,6 +17,7 @@ class GridCell extends StatefulWidget {
   const GridCell({
     Key key,
     @required this.cell,
+    @required this.size,
     @required this.toggleBomb,
     @required this.revealBombs,
     @required this.revealNeighbors,
@@ -42,7 +44,9 @@ class _GridCellState extends State<GridCell> {
   Widget build(BuildContext context) {
     Cell cell = widget.cell;
 
-    return Padding(
+    return Container(
+      width: widget.size,
+      height: widget.size,
       padding: const EdgeInsets.all(0.5),
       child: Stack(
         children: <Widget>[
