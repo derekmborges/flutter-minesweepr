@@ -13,6 +13,7 @@ class GridCell extends StatefulWidget {
   final Function revealBombs;
   final Function revealNeighbors;
   final bool isClean;
+  final bool hasBombsLeft;
 
   const GridCell({
     Key key,
@@ -21,7 +22,8 @@ class GridCell extends StatefulWidget {
     @required this.toggleBomb,
     @required this.revealBombs,
     @required this.revealNeighbors,
-    @required this.isClean
+    @required this.isClean,
+    @required this.hasBombsLeft
   }) : super(key: key);
 
   @override
@@ -79,10 +81,10 @@ class _GridCellState extends State<GridCell> {
                 opacity: cell.isRevealed ? 0.0 : 1.0,
                 curve: Curves.easeOutSine,
                 child: GestureDetector(
-                  onTapDown: !cell.isRevealed && !widget.isClean
+                  onTapDown: !cell.isRevealed && widget.hasBombsLeft && !widget.isClean
                       ? (_) => _startTimer(cell)
                       : (_) {},
-                  onTapUp: !cell.isRevealed && !widget.isClean
+                  onTapUp: !cell.isRevealed && widget.hasBombsLeft && !widget.isClean
                       ? (_) => _toggleTimer.cancel()
                       : (_) {},
                   child: MaterialButton(
@@ -99,10 +101,10 @@ class _GridCellState extends State<GridCell> {
           Positioned.fill(
             child: cell.isMarkedAsBomb ? Center(
               child: GestureDetector(
-                onTapDown: !cell.isRevealed && !widget.isClean
+                onTapDown: !cell.isRevealed && widget.hasBombsLeft && !widget.isClean
                     ? (_) => _startTimer(cell)
                     : (_) {},
-                onTapUp: !cell.isRevealed && !widget.isClean
+                onTapUp: !cell.isRevealed && widget.hasBombsLeft && !widget.isClean
                     ? (_) => _toggleTimer.cancel()
                     : (_) {},
                 child: Icon(

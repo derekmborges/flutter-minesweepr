@@ -72,6 +72,7 @@ class GameGridState extends State<GameGrid> with SingleTickerProviderStateMixin 
         revealBombs: _revealBombs,
         revealNeighbors: _revealNeighbors,
         isClean: grid.isClean,
+        hasBombsLeft: grid.markedBombs < grid.bombCount,
       )
       : Container(
           padding: const EdgeInsets.all(0.5),
