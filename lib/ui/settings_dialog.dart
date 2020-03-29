@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:minesweepr/data/Difficulty.dart';
+import 'package:minesweepr/data/selected_difficulty_repository.dart';
 
 class SettingsDialog extends StatefulWidget {
-  final Difficulty currentDifficulty;
-  final Function updateDifficulty;
+  final DifficultyDB currentDifficulty;
+  final Function difficultyUpdated;
 
-  const SettingsDialog({Key key, this.currentDifficulty, this.updateDifficulty}) : super(key: key);
+  const SettingsDialog({Key key, this.currentDifficulty, this.difficultyUpdated}) : super(key: key);
 
   @override
   _SettingsDialogState createState() => _SettingsDialogState();
 }
 
 class _SettingsDialogState extends State<SettingsDialog> {
-  Difficulty _difficultyController;
+  DifficultyDB _difficultyController;
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +33,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 fontWeight: FontWeight.bold
             ),
           ),
-          DropdownButtonFormField<Difficulty>(
+          DropdownButtonFormField<DifficultyDB>(
             value: _difficultyController,
-            items: [easyDifficulty, mediumDifficulty, hardDifficulty]
-                .map((difficulty) => DropdownMenuItem(
-              child: Text(difficulty.label),
+            items: dbDifficulties.map((difficulty) => DropdownMenuItem(
+              child: Text(difficulty.name),
               value: difficulty,
             ))
                 .toList(),
@@ -52,7 +52,14 @@ class _SettingsDialogState extends State<SettingsDialog> {
       actions: <Widget>[
         FlatButton(
           onPressed: () {
-            widget.updateDifficulty(_difficultyController);
+            print("Checking if difficulty was changed from ${widget.currentDifficulty} to $_difficultyController");
+            if (_difficultyController != widget.currentDifficulty) {
+              _save().then((_) {
+                print("Saved new difficulty: $_difficultyController");
+                print("Updating parent widgets");
+                widget.difficultyUpdated();
+              });
+            }
             Navigator.pop(context);
           },
           child: Text('Save'),
@@ -63,5 +70,11 @@ class _SettingsDialogState extends State<SettingsDialog> {
         )
       ],
     );
+  }
+
+  _save() async {
+    SelectedDifficultyRepository helper = SelectedDifficultyRepository.instance;
+    int id = await helper.setSelectedDifficulty(_difficultyController);
+    return id;
   }
 }

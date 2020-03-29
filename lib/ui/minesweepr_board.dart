@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
+import 'package:minesweepr/data/selected_difficulty_repository.dart';
 import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/game_bar.dart';
 import 'package:minesweepr/ui/game_grid.dart';
 import 'package:minesweepr/ui/game_over_dialog.dart';
 import 'package:minesweepr/ui/game_over_popup.dart';
 import 'package:minesweepr/ui/game_won_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MinesweeprBoard extends StatefulWidget {
   @override
@@ -16,7 +18,8 @@ class MinesweeprBoard extends StatefulWidget {
 }
 
 class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProviderStateMixin {
-  Difficulty selectedDifficulty;
+  SelectedDifficultyRepository selectedDifficultyRepo;
+  DifficultyDB selectedDifficulty;
   Grid grid;
 
   final GlobalKey<GameBarState> _gameBarState = GlobalKey<GameBarState>();
@@ -25,8 +28,24 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    selectedDifficulty = mediumDifficulty;
-    _initGrid();
+
+    selectedDifficultyRepo = SelectedDifficultyRepository.instance;
+    _getSelectedDifficulty().then((difficulty) {
+      if (difficulty == null) {
+        selectedDifficultyRepo.setSelectedDifficulty(DifficultyDB.easy());
+      } else {
+        setState(() {
+          selectedDifficulty = difficulty;
+        });
+        _initGrid();
+      }
+    });
+  }
+
+  _getSelectedDifficulty() async {
+    DifficultyDB difficulty = await selectedDifficultyRepo.getSelectedDifficulty();
+    print('Read difficulty: ${difficulty.name}');
+    return difficulty;
   }
 
   void _initGrid() {
@@ -41,7 +60,19 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    if (selectedDifficulty != null) {
+      print("Selected difficulty:");
+      print("Name: ${selectedDifficulty.name}");
+      print("Width: ${selectedDifficulty.width}");
+      print("Height: ${selectedDifficulty.height}");
+      print("Bomb count: ${selectedDifficulty.bombCount}");
+    } else {
+      print("selectedDifficulty is null");
+    }
+    if (grid == null) print ("grid is null");
+    else print("Grid bomb count: ${grid.bombCount}");
+
+    return grid != null ? Column(
       children: <Widget>[
         Container(
           width: double.infinity,
@@ -64,7 +95,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
           finishGame: _finishGame,
         ),
       ],
-    );
+    ) : Container(child: Text("Loading"));
   }
 
   void _initGame() {
@@ -73,24 +104,38 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
 
   void _finishGame({bool won = false}) {
     if (won) {
+//      int time = _gameBarState.currentState.gameTimer.tick;
+//      _saveBestTime(time);
       showGameOverPopup(context, GameWonDialog(newGame: _newGame), "Congrats");
     } else {
       showGameOverPopup(context, GameOverDialog(newGame: _newGame), "Uh Oh!");
     }
   }
 
+//  _saveBestTime(int completionTime) async {
+//    final prefs = await SharedPreferences.getInstance();
+//    final currentBest = prefs.getInt(selectedDifficulty.bestTimeKey) ?? 0;
+//    if (completionTime > currentBest) {
+//      print("NEW BEST TIME! $completionTime in $selectedDifficulty");
+//      prefs.setInt("best_time_medium", completionTime);
+//    } else {
+//      print("The completion time $completionTime did not beat $currentBest for $selectedDifficulty");
+//    }
+//  }
+
   void _updateBombsRemaining(int delta) {
     _gameBarState.currentState.updateBombsRemaining(delta);
   }
 
-  void _difficultyUpdated(Difficulty newDifficulty) {
-    if (newDifficulty.label != selectedDifficulty.label) {
+  void _difficultyUpdated() {
+    _getSelectedDifficulty().then((difficulty) {
+      print("Getting updated difficulty: $difficulty");
       setState(() {
-        selectedDifficulty = newDifficulty;
-        _initGrid();
+        selectedDifficulty = difficulty;
       });
-      _newGame();
-    }
+      _initGrid();
+    });
+    _newGame();
   }
 
   void _newGame() {

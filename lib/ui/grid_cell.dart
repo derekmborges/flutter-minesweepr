@@ -101,10 +101,10 @@ class _GridCellState extends State<GridCell> {
           Positioned.fill(
             child: cell.isMarkedAsBomb ? Center(
               child: GestureDetector(
-                onTapDown: !cell.isRevealed && widget.hasBombsLeft && !widget.isClean
+                onTapDown: !cell.isRevealed && !widget.isClean
                     ? (_) => _startTimer(cell)
                     : (_) {},
-                onTapUp: !cell.isRevealed && widget.hasBombsLeft && !widget.isClean
+                onTapUp: !cell.isRevealed && !widget.isClean
                     ? (_) => _toggleTimer.cancel()
                     : (_) {},
                 child: Icon(

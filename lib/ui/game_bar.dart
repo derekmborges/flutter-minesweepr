@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:minesweepr/assets/bomb_icon.dart';
 import 'package:minesweepr/data/Difficulty.dart';
+import 'package:minesweepr/data/selected_difficulty_repository.dart';
 import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/settings_dialog.dart';
 import 'package:minesweepr/ui/styles.dart';
 
 class GameBar extends StatefulWidget {
-  final Difficulty selectedDifficulty;
-  final ValueChanged<Difficulty> difficultyUpdated;
+  final DifficultyDB selectedDifficulty;
+  final Function difficultyUpdated;
   final Function newGame;
 
   const GameBar({
@@ -31,12 +32,13 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    bombsRemaining = widget.selectedDifficulty.bombCount;
     gameTimerLabel = 0;
   }
 
   @override
   Widget build(BuildContext context) {
+    bombsRemaining = widget.selectedDifficulty.bombCount;
+
     return Material(
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10.0),
@@ -108,7 +110,7 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
       builder: (context) {
         return SettingsDialog(
           currentDifficulty: widget.selectedDifficulty,
-          updateDifficulty: widget.difficultyUpdated,
+          difficultyUpdated: widget.difficultyUpdated,
         );
     });
   }

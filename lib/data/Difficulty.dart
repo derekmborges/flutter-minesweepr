@@ -5,6 +5,9 @@ class Difficulty {
   final String label;
 
   Difficulty(this.width, this.height, this.bombCount, this.label);
+
+  @override
+  String toString() => label;
 }
 
 Difficulty easyDifficulty = Difficulty(6, 12, 10, "Easy");
