@@ -127,12 +127,6 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
     });
   }
 
-  void updateGameTimer(int time) {
-    setState(() {
-      gameTimerLabel = time;
-    });
-  }
-
   void newGame() {
     setState(() {
       bombsRemaining = widget.selectedDifficulty.bombCount;

@@ -20,6 +20,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
   Grid grid;
 
   final GlobalKey<GameBarState> _gameBarState = GlobalKey<GameBarState>();
+  final GlobalKey<GameGridState> _gameGridState = GlobalKey<GameGridState>();
 
   @override
   void initState() {
@@ -29,11 +30,13 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
   }
 
   void _initGrid() {
-    grid = Grid(
-        width: selectedDifficulty.width,
-        height: selectedDifficulty.height,
-        bombCount: selectedDifficulty.bombCount
-    );
+    setState(() {
+      grid = Grid(
+          width: selectedDifficulty.width,
+          height: selectedDifficulty.height,
+          bombCount: selectedDifficulty.bombCount
+      );
+    });
   }
 
   @override
@@ -54,6 +57,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
           newGame: _newGame,
         ),
         GameGrid(
+          key: _gameGridState,
           grid: grid,
           updateBombsRemaining: _updateBombsRemaining,
           initGame: _initGame,
@@ -80,17 +84,17 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
   }
 
   void _difficultyUpdated(Difficulty newDifficulty) {
-    setState(() {
-      print("new difficulty: ${newDifficulty.label}");
-      selectedDifficulty = newDifficulty;
-      _initGrid();
-    });
+    if (newDifficulty.label != selectedDifficulty.label) {
+      setState(() {
+        selectedDifficulty = newDifficulty;
+        _initGrid();
+      });
+      _newGame();
+    }
   }
 
   void _newGame() {
-    setState(() {
-      grid.reset();
-    });
+    _gameGridState.currentState.newGame();
     _gameBarState.currentState.newGame();
   }
 

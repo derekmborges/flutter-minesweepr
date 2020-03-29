@@ -22,20 +22,21 @@ class GameGrid extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _GameGridState createState() => _GameGridState();
+  GameGridState createState() => GameGridState();
 }
 
-class _GameGridState extends State<GameGrid> {
+class GameGridState extends State<GameGrid> with SingleTickerProviderStateMixin {
   Grid grid;
 
   @override
   void initState() {
     super.initState();
-    grid = widget.grid;
   }
 
   @override
   Widget build(BuildContext context) {
+    grid = widget.grid;
+
     return Container(
       padding: EdgeInsets.all(10.0),
       decoration: BoxDecoration(
@@ -61,7 +62,6 @@ class _GameGridState extends State<GameGrid> {
   }
 
   Widget _buildCell(int x, int y, double size) {
-//    print("Building cell [$x, $y]");
     Cell cell = _getCell(x, y);
 
     return cell != null
@@ -86,6 +86,12 @@ class _GameGridState extends State<GameGrid> {
             },
           ),
       );
+  }
+
+  void newGame() {
+    setState(() {
+      grid.reset();
+    });
   }
 
   void _initGame(int x, int y) {
