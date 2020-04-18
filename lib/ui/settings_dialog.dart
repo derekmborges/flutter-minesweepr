@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:minesweepr/data/Difficulty.dart';
+import 'package:minesweepr/data/data_repository.dart';
+import 'package:minesweepr/data/models/difficulty.dart';
 
 class SettingsDialog extends StatefulWidget {
   final Difficulty currentDifficulty;
-  final Function updateDifficulty;
+  final Function difficultyUpdated;
 
-  const SettingsDialog({Key key, this.currentDifficulty, this.updateDifficulty}) : super(key: key);
+  const SettingsDialog({Key key, this.currentDifficulty, this.difficultyUpdated}) : super(key: key);
 
   @override
   _SettingsDialogState createState() => _SettingsDialogState();
@@ -34,9 +35,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
           ),
           DropdownButtonFormField<Difficulty>(
             value: _difficultyController,
-            items: [easyDifficulty, mediumDifficulty, hardDifficulty]
-                .map((difficulty) => DropdownMenuItem(
-              child: Text(difficulty.label),
+            items: difficulties.map((difficulty) => DropdownMenuItem(
+              child: Text(difficulty.name),
               value: difficulty,
             ))
                 .toList(),
@@ -52,7 +52,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
       actions: <Widget>[
         FlatButton(
           onPressed: () {
-            widget.updateDifficulty(_difficultyController);
+            print("Checking if difficulty was changed from ${widget.currentDifficulty} to $_difficultyController");
+            if (_difficultyController != widget.currentDifficulty) {
+              _save().then((_) => widget.difficultyUpdated());
+            }
             Navigator.pop(context);
           },
           child: Text('Save'),
@@ -63,5 +66,10 @@ class _SettingsDialogState extends State<SettingsDialog> {
         )
       ],
     );
+  }
+
+  _save() async {
+    DataRepository helper = DataRepository.instance;
+    await helper.setSelectedDifficulty(_difficultyController);
   }
 }

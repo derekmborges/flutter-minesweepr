@@ -2,18 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:minesweepr/assets/bomb_icon.dart';
-import 'package:minesweepr/data/Difficulty.dart';
+import 'package:minesweepr/data/models/difficulty.dart';
 import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/settings_dialog.dart';
 import 'package:minesweepr/ui/styles.dart';
 
 class GameBar extends StatefulWidget {
+  final int bombsRemaining;
   final Difficulty selectedDifficulty;
-  final ValueChanged<Difficulty> difficultyUpdated;
+  final Function difficultyUpdated;
   final Function newGame;
 
   const GameBar({
     Key key,
+    @required this.bombsRemaining,
     @required this.selectedDifficulty,
     @required this.difficultyUpdated,
     @required this.newGame
@@ -31,12 +33,12 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    bombsRemaining = widget.selectedDifficulty.bombCount;
     gameTimerLabel = 0;
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Material(
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10.0),
@@ -53,7 +55,7 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
                 Icon(BombIcon.bomb),
                 SizedBox(width: 5),
                 Text(
-                    bombsRemaining.toString(),
+                    widget.bombsRemaining.toString(),
                   style: appBarTextStyle
                 ),
                 SizedBox(width: 15),
@@ -108,14 +110,8 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
       builder: (context) {
         return SettingsDialog(
           currentDifficulty: widget.selectedDifficulty,
-          updateDifficulty: widget.difficultyUpdated,
+          difficultyUpdated: widget.difficultyUpdated,
         );
-    });
-  }
-
-  void updateBombsRemaining(int delta) {
-    setState(() {
-      bombsRemaining += delta;
     });
   }
 
@@ -127,9 +123,13 @@ class GameBarState extends State<GameBar> with SingleTickerProviderStateMixin {
     });
   }
 
+  void cancelTimer() {
+    if (gameTimer != null && gameTimer.isActive) gameTimer.cancel();
+  }
+
   void newGame() {
     setState(() {
-      bombsRemaining = widget.selectedDifficulty.bombCount;
+      bombsRemaining = widget.bombsRemaining;
       gameTimerLabel = 0;
       if (gameTimer != null && gameTimer.isActive) gameTimer.cancel();
     });
