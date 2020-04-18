@@ -1,16 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minesweepr/data/Difficulty.dart';
 import 'package:minesweepr/data/Grid.dart';
-import 'package:minesweepr/data/selected_difficulty_repository.dart';
+import 'package:minesweepr/data/data_repository.dart';
+import 'package:minesweepr/data/models/difficulty.dart';
+import 'package:minesweepr/data/models/high_score.dart';
 import 'package:minesweepr/ui/colors.dart';
 import 'package:minesweepr/ui/game_bar.dart';
 import 'package:minesweepr/ui/game_grid.dart';
 import 'package:minesweepr/ui/game_over_dialog.dart';
 import 'package:minesweepr/ui/game_over_popup.dart';
 import 'package:minesweepr/ui/game_won_dialog.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MinesweeprBoard extends StatefulWidget {
   @override
@@ -18,8 +18,10 @@ class MinesweeprBoard extends StatefulWidget {
 }
 
 class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProviderStateMixin {
-  SelectedDifficultyRepository selectedDifficultyRepo;
-  DifficultyDB selectedDifficulty;
+  DataRepository dataRepo;
+  Difficulty selectedDifficulty;
+  int bombsRemaining;
+  HighScore highScore;
   Grid grid;
 
   final GlobalKey<GameBarState> _gameBarState = GlobalKey<GameBarState>();
@@ -28,24 +30,37 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    dataRepo = DataRepository.instance;
 
-    selectedDifficultyRepo = SelectedDifficultyRepository.instance;
     _getSelectedDifficulty().then((difficulty) {
       if (difficulty == null) {
-        selectedDifficultyRepo.setSelectedDifficulty(DifficultyDB.easy());
-      } else {
-        setState(() {
-          selectedDifficulty = difficulty;
-        });
-        _initGrid();
+        difficulty = Difficulty.easy();
+        dataRepo.setSelectedDifficulty(difficulty);
       }
+
+      setState(() {
+        selectedDifficulty = difficulty;
+        bombsRemaining = selectedDifficulty.bombCount;
+      });
+
+      _initGrid();
+
+      _getHighScore().then((currentHighScore) {
+        highScore = currentHighScore;
+      });
     });
   }
 
   _getSelectedDifficulty() async {
-    DifficultyDB difficulty = await selectedDifficultyRepo.getSelectedDifficulty();
-    print('Read difficulty: ${difficulty.name}');
+    Difficulty difficulty = await dataRepo.getSelectedDifficulty();
+    print('Read difficulty: $difficulty');
     return difficulty;
+  }
+
+  _getHighScore() async {
+    HighScore highScore = await dataRepo.getHighScore(selectedDifficulty.name);
+    print("Read highScore: $highScore");
+    return highScore;
   }
 
   void _initGrid() {
@@ -60,18 +75,6 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    if (selectedDifficulty != null) {
-      print("Selected difficulty:");
-      print("Name: ${selectedDifficulty.name}");
-      print("Width: ${selectedDifficulty.width}");
-      print("Height: ${selectedDifficulty.height}");
-      print("Bomb count: ${selectedDifficulty.bombCount}");
-    } else {
-      print("selectedDifficulty is null");
-    }
-    if (grid == null) print ("grid is null");
-    else print("Grid bomb count: ${grid.bombCount}");
-
     return grid != null ? Column(
       children: <Widget>[
         Container(
@@ -83,6 +86,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
         ),
         GameBar(
           key: _gameBarState,
+          bombsRemaining: bombsRemaining,
           selectedDifficulty: selectedDifficulty,
           difficultyUpdated: _difficultyUpdated,
           newGame: _newGame,
@@ -95,7 +99,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
           finishGame: _finishGame,
         ),
       ],
-    ) : Container(child: Text("Loading"));
+    ) : Container(child: Text("Loading")); // TODO: Make loading screen
   }
 
   void _initGame() {
@@ -104,27 +108,36 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
 
   void _finishGame({bool won = false}) {
     if (won) {
-//      int time = _gameBarState.currentState.gameTimer.tick;
-//      _saveBestTime(time);
-      showGameOverPopup(context, GameWonDialog(newGame: _newGame), "Congrats");
+      int time = _gameBarState.currentState.gameTimer.tick;
+      print("GAME WON! Time: $time");
+      _gameBarState.currentState.cancelTimer();
+      _saveBestTime(time);
+      showGameOverPopup(context, GameWonDialog(
+          newGame: _newGame,
+          completionTime: time,
+          newBestTime: time == highScore.bestTime
+      ), "You won!");
     } else {
-      showGameOverPopup(context, GameOverDialog(newGame: _newGame), "Uh Oh!");
+      showGameOverPopup(context, GameOverDialog(newGame: _newGame), "Game over!");
     }
   }
 
-//  _saveBestTime(int completionTime) async {
-//    final prefs = await SharedPreferences.getInstance();
-//    final currentBest = prefs.getInt(selectedDifficulty.bestTimeKey) ?? 0;
-//    if (completionTime > currentBest) {
-//      print("NEW BEST TIME! $completionTime in $selectedDifficulty");
-//      prefs.setInt("best_time_medium", completionTime);
-//    } else {
-//      print("The completion time $completionTime did not beat $currentBest for $selectedDifficulty");
-//    }
-//  }
+  _saveBestTime(int completionTime) async {
+    if (highScore == null || completionTime < highScore.bestTime) {
+      print("NEW BEST TIME! $completionTime in $selectedDifficulty");
+      dataRepo.setHighScore(selectedDifficulty.name, completionTime);
+      _getHighScore().then((currentHighScore) {
+        highScore = currentHighScore;
+      });
+    } else {
+      print("The completion time $completionTime did not beat ${highScore.bestTime} for $selectedDifficulty");
+    }
+  }
 
   void _updateBombsRemaining(int delta) {
-    _gameBarState.currentState.updateBombsRemaining(delta);
+    setState(() {
+      bombsRemaining += delta;
+    });
   }
 
   void _difficultyUpdated() {
@@ -132,6 +145,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
       print("Getting updated difficulty: $difficulty");
       setState(() {
         selectedDifficulty = difficulty;
+        bombsRemaining = selectedDifficulty.bombCount;
       });
       _initGrid();
     });
@@ -139,6 +153,9 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
   }
 
   void _newGame() {
+    setState(() {
+      bombsRemaining = selectedDifficulty.bombCount;
+    });
     _gameGridState.currentState.newGame();
     _gameBarState.currentState.newGame();
   }

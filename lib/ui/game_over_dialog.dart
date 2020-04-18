@@ -18,7 +18,7 @@ class GameOverDialog extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
-                "Game Over",
+                "Try Again",
                 style: TextStyle(
                     color: colorPrimaryDark,
                     fontSize: 36.0,

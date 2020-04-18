@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:minesweepr/data/Difficulty.dart';
-import 'package:minesweepr/data/selected_difficulty_repository.dart';
+import 'package:minesweepr/data/data_repository.dart';
+import 'package:minesweepr/data/models/difficulty.dart';
 
 class SettingsDialog extends StatefulWidget {
-  final DifficultyDB currentDifficulty;
+  final Difficulty currentDifficulty;
   final Function difficultyUpdated;
 
   const SettingsDialog({Key key, this.currentDifficulty, this.difficultyUpdated}) : super(key: key);
@@ -13,7 +13,7 @@ class SettingsDialog extends StatefulWidget {
 }
 
 class _SettingsDialogState extends State<SettingsDialog> {
-  DifficultyDB _difficultyController;
+  Difficulty _difficultyController;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +33,9 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 fontWeight: FontWeight.bold
             ),
           ),
-          DropdownButtonFormField<DifficultyDB>(
+          DropdownButtonFormField<Difficulty>(
             value: _difficultyController,
-            items: dbDifficulties.map((difficulty) => DropdownMenuItem(
+            items: difficulties.map((difficulty) => DropdownMenuItem(
               child: Text(difficulty.name),
               value: difficulty,
             ))
@@ -54,11 +54,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
           onPressed: () {
             print("Checking if difficulty was changed from ${widget.currentDifficulty} to $_difficultyController");
             if (_difficultyController != widget.currentDifficulty) {
-              _save().then((_) {
-                print("Saved new difficulty: $_difficultyController");
-                print("Updating parent widgets");
-                widget.difficultyUpdated();
-              });
+              _save().then((_) => widget.difficultyUpdated());
             }
             Navigator.pop(context);
           },
@@ -73,8 +69,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
   }
 
   _save() async {
-    SelectedDifficultyRepository helper = SelectedDifficultyRepository.instance;
-    int id = await helper.setSelectedDifficulty(_difficultyController);
-    return id;
+    DataRepository helper = DataRepository.instance;
+    await helper.setSelectedDifficulty(_difficultyController);
   }
 }
