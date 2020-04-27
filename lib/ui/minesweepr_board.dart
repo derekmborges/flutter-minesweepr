@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:minesweepr/data/Grid.dart';
 import 'package:minesweepr/data/data_repository.dart';
@@ -9,6 +10,7 @@ import 'package:minesweepr/ui/game_grid.dart';
 import 'package:minesweepr/ui/game_over_dialog.dart';
 import 'package:minesweepr/ui/game_over_popup.dart';
 import 'package:minesweepr/ui/game_won_dialog.dart';
+import 'package:minesweepr/ui/loading_screen.dart';
 
 class MinesweeprBoard extends StatefulWidget {
   @override
@@ -41,7 +43,9 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
         bombsRemaining = selectedDifficulty.bombCount;
       });
 
-      _initGrid();
+      Future.delayed(Duration(seconds: 3), () {
+        _initGrid();
+      });
 
       _getHighScore().then((currentHighScore) {
         highScore = currentHighScore;
@@ -97,7 +101,7 @@ class _MinesweeprBoardState extends State<MinesweeprBoard> with SingleTickerProv
           finishGame: _finishGame,
         ),
       ],
-    ) : Container(child: Text("Loading")); // TODO: Make loading screen
+    ) : LoadingScreen();
   }
 
   void _initGame() {
